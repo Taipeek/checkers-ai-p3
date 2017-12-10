@@ -257,22 +257,45 @@ def newBoard():
     return board
 
 
+# def printBoard(board):
+#     # Print a board
+#     numberedBoard = [
+#         ['  ', '1 ', '  ', '2 ', '  ', '3 ', '  ', '4 '],
+#         ['5 ', '  ', '6 ', '  ', '7 ', '  ', '8 ', '  '],
+#         ['  ', '9 ', '  ', '10', '  ', '11', '  ', '12'],
+#         ['13', '  ', '14', '  ', '15', '  ', '16', '  '],
+#         ['  ', '17', '  ', '18', '  ', '19', '  ', '20'],
+#         ['21', '  ', '22', '  ', '23', '  ', '24', '  '],
+#         ['  ', '25', '  ', '26', '  ', '27', '  ', '28'],
+#         ['29', '  ', '30', '  ', '31', '  ', '32', '  ']
+#     ]
+#     print '-' * 33, '\t', '-' * 41
+#     for i in range(0, 8):
+#         print '|',
+#         print ' | '.join(board[i]), '|', '\t|', ' | '.join(numberedBoard[i]), '|'
+#         print '-' * 33, '\t', '-' * 41
+numBoards = 0
+maxStateCount = 100000
+out = np.zeros((maxStateCount, 8, 8))
+
+
 def printBoard(board):
     # Print a board
-    numberedBoard = [
-        ['  ', '1 ', '  ', '2 ', '  ', '3 ', '  ', '4 '],
-        ['5 ', '  ', '6 ', '  ', '7 ', '  ', '8 ', '  '],
-        ['  ', '9 ', '  ', '10', '  ', '11', '  ', '12'],
-        ['13', '  ', '14', '  ', '15', '  ', '16', '  '],
-        ['  ', '17', '  ', '18', '  ', '19', '  ', '20'],
-        ['21', '  ', '22', '  ', '23', '  ', '24', '  '],
-        ['  ', '25', '  ', '26', '  ', '27', '  ', '28'],
-        ['29', '  ', '30', '  ', '31', '  ', '32', '  ']
-    ]
-    print('-' * 33, '\t', '-' * 41)
+    if numBoards == maxStateCount:
+        return
     for i in range(0, 8):
-        print('|', ' | '.join(board[i]), '|', '\t|', ' | '.join(numberedBoard[i]), '|')
-        print('-' * 33, '\t', '-' * 41)
+        for j in range(0, 8):
+            if board[i][j] == ' ':
+                out[numBoards, i, j] = 0
+            elif board[i][j] == 'r':
+                out[numBoards, i, j] = 1
+            elif board[i][j] == 'R':
+                out[numBoards, i, j] = 2
+            elif board[i][j] == 'w':
+                out[numBoards, i, j] = -1
+            elif board[i][j] == 'W':
+                out[numBoards, i, j] = -2
+    numBoards += 1
 
 
 def playGame(p1, p2, verbose, t=150, board=newBoard()):
@@ -318,8 +341,8 @@ def playGame(p1, p2, verbose, t=150, board=newBoard()):
         (p1, p2) = (p2, p1)
         (p1time, p2time) = (p2time, p1time)
         (currentColor, nextColor) = (nextColor, currentColor)
+        # printBoard(board)
         if verbose == True:
-            printBoard(board)
             print("Pieces remaining:", currentColor, "=", countPieces(board, currentColor), end=' ')
             print(nextColor, "=", countPieces(board, nextColor), "Moves left =", movesRemaining)
             print("Clock remaining: %s=%f, %s=%f" % (currentColor, p1time, nextColor, p2time))
@@ -353,50 +376,50 @@ def getBoardFromddd(ddd, index):
     return board
 
 
-model = load_model('model.h5')
 if __name__ == "__main__":
+    global model
     try:
         optlist, args = getopt.getopt(sys.argv[1:], 'vt:')
     except getopt.error:
         print("Usage: python %s {-v} {-t time} player1 player2" % (sys.argv[0]))
         exit()
 
-    verbose = False
-    clockTime = 150.0
-    for (op, opVal) in optlist:
-        if (op == "-v"):
-            verbose = True
-        if (op == "-t"):
-            clockTime = float(opVal)
-    exec("from " + args[0] + " import nextMove")
-    p1 = nextMove
-    exec("from " + args[1] + " import nextMove")
-    p2 = nextMove
-    result = playGame(p1, p2, verbose, clockTime)
+    model = load_model('my_model.h5')
+    states = getStatesFromCSV()
+    results = np.zeros(maxStateCount)
+    while numBoards < maxStateCount:
+        board = getBoardFromddd(states, numBoards)
+        verbose = False
+        clockTime = 150.0
+        for (op, opVal) in optlist:
+            if (op == "-v"):
+                verbose = True
+            if (op == "-t"):
+                clockTime = float(opVal)
+        exec ("from " + args[0] + " import nextMove")
+        p1 = nextMove
+        exec ("from " + args[1] + " import nextMove")
+        p2 = nextMove
+        result = playGame(p1, p2, verbose, clockTime, board)
 
-    printBoard(result[0])
 
-    if result[3] == "Drawn":
-        if result[1] > result[2]:
-            print(
-                "1 Ran Out Of Moves :: %s Wins %s Loses (%d to %d)" % (args[0], args[1], result[1], result[2]))
-        elif result[1] < result[2]:
-            print(
-                "0 Ran Out Of Moves :: %s Wins %s Loses (%d to %d)" % (args[1], args[0], result[2], result[1]))
+        if result[3] == "Drawn":
+            if result[1] > result[2]:
+                results[numBoards] = 1
+            elif result[1] < result[2]:
+                results[numBoards] = 0
+            else:
+                results[numBoards] = 0.5
+        elif result[3] == "Won":
+            if result[1] > result[2]:
+                results[numBoards] = 1
+            elif result[1] < result[2]:
+                results[numBoards] = 0
         else:
-            print(
-                "0.5 Ran Out Of Moves :: TIE %s, %s, (%d to %d)" % (args[0], args[1], result[1], result[2]))
-    elif result[3] == "Won":
-        if result[1] > result[2]:
-            print(
-                "1 %s Wins %s Loses (%d to %d)" % (args[0], args[1], result[1], result[2]))
-        elif result[1] < result[2]:
-            print(
-                "0 %s Wins %s Loses (%d to %d)" % (args[1], args[0], result[2], result[1]))
-    else:
-        if result[1] > result[2]:
-            print(
-                "1 %s Wins %s Loses (%d to %d) TIMEOUT" % (args[0], args[1], result[1], result[2]))
-        elif result[1] < result[2]:
-            print(
-                "0 %s Wins %s Loses (%d to %d) TIMEOUT" % (args[1], args[0], result[2], result[1]))
+            if result[1] > result[2]:
+                results[numBoards] = 1
+            elif result[1] < result[2]:
+                results[numBoards] = 0
+        numBoards += 1
+        print(numBoards," Current date & time " + time.strftime("%c"), end=' ')
+    np.savetxt("results.csv", results, delimiter=',')

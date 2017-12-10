@@ -3,7 +3,6 @@ import time
 import getopt
 import numpy as np
 from copy import deepcopy
-from keras.models import load_model
 
 
 def getOpponentColor(color):
@@ -65,7 +64,7 @@ def doMovePosition(board, x1, y1, x2, y2):
     board[x1][y1] = ' '
 
     if abs(x1 - x2) == 2:  # It's a capture move
-        board[int((x1 + x2) / 2)][int((y1 + y2) / 2)] = ' '
+        board[(x1 + x2) / 2][(y1 + y2) / 2] = ' '
         isCapture = True
 
     if x2 == 0 or x2 == 7:
@@ -121,7 +120,7 @@ def canMoveToPosition(board, x1, y1, x2, y2):
     if color == 'r' and x2 < x1:  # Red men cannot move up
         return False
     if x1_x2 == 2:  # It could be a capture move
-        if board[int((x1 + x2) / 2)][int((y1 + y2) / 2)].lower() != getOpponentColor(color):
+        if board[(x1 + x2) / 2][(y1 + y2) / 2].lower() != getOpponentColor(color):
             # Middle piece must be opponent
             return False
     return True
@@ -257,25 +256,49 @@ def newBoard():
     return board
 
 
+# def printBoard(board):
+#     # Print a board
+#     numberedBoard = [
+#         ['  ', '1 ', '  ', '2 ', '  ', '3 ', '  ', '4 '],
+#         ['5 ', '  ', '6 ', '  ', '7 ', '  ', '8 ', '  '],
+#         ['  ', '9 ', '  ', '10', '  ', '11', '  ', '12'],
+#         ['13', '  ', '14', '  ', '15', '  ', '16', '  '],
+#         ['  ', '17', '  ', '18', '  ', '19', '  ', '20'],
+#         ['21', '  ', '22', '  ', '23', '  ', '24', '  '],
+#         ['  ', '25', '  ', '26', '  ', '27', '  ', '28'],
+#         ['29', '  ', '30', '  ', '31', '  ', '32', '  ']
+#     ]
+#     print '-' * 33, '\t', '-' * 41
+#     for i in range(0, 8):
+#         print '|',
+#         print ' | '.join(board[i]), '|', '\t|', ' | '.join(numberedBoard[i]), '|'
+#         print '-' * 33, '\t', '-' * 41
+numBoards = 0
+maxStateCount = 100000
+out = np.zeros((maxStateCount, 8, 8))
+
+
 def printBoard(board):
     # Print a board
-    numberedBoard = [
-        ['  ', '1 ', '  ', '2 ', '  ', '3 ', '  ', '4 '],
-        ['5 ', '  ', '6 ', '  ', '7 ', '  ', '8 ', '  '],
-        ['  ', '9 ', '  ', '10', '  ', '11', '  ', '12'],
-        ['13', '  ', '14', '  ', '15', '  ', '16', '  '],
-        ['  ', '17', '  ', '18', '  ', '19', '  ', '20'],
-        ['21', '  ', '22', '  ', '23', '  ', '24', '  '],
-        ['  ', '25', '  ', '26', '  ', '27', '  ', '28'],
-        ['29', '  ', '30', '  ', '31', '  ', '32', '  ']
-    ]
-    print('-' * 33, '\t', '-' * 41)
+    if numBoards == maxStateCount:
+        return
+    global numBoards, out
     for i in range(0, 8):
-        print('|', ' | '.join(board[i]), '|', '\t|', ' | '.join(numberedBoard[i]), '|')
-        print('-' * 33, '\t', '-' * 41)
+        for j in range(0, 8):
+            if board[i][j] == ' ':
+                out[numBoards, i, j] = 0
+            elif board[i][j] == 'r':
+                out[numBoards, i, j] = 1
+            elif board[i][j] == 'R':
+                out[numBoards, i, j] = 2
+            elif board[i][j] == 'w':
+                out[numBoards, i, j] = -1
+            elif board[i][j] == 'W':
+                out[numBoards, i, j] = -2
+    numBoards += 1
 
 
-def playGame(p1, p2, verbose, t=150, board=newBoard()):
+def playGame(p1, p2, verbose, t=150):
     # Takes as input two functions p1 and p2 (each of which
     # calculates a next move given a board and player color),
     # and returns a tuple containing
@@ -284,6 +307,7 @@ def playGame(p1, p2, verbose, t=150, board=newBoard()):
     # pieces left for white,
     # and status message "Drawn"/"Won"/"Timeout"/"Bad Move"
 
+    board = newBoard()
     # printBoard(board)
     print()
     currentColor = 'r'
@@ -297,7 +321,7 @@ def playGame(p1, p2, verbose, t=150, board=newBoard()):
     while isAnyMovePossible(board, currentColor) == True:
         tempBoard = deepcopy(board)
         t1 = time.time()
-        nextMove = p1(tempBoard, currentColor, p1time, movesRemaining, 0.95)
+        nextMove = p1(tempBoard, currentColor, p1time, movesRemaining,0.6)
         t2 = time.time()
         p1time = p1time - (t2 - t1)
         p1realTime = p1realTime - (t2 - t1)
@@ -318,8 +342,8 @@ def playGame(p1, p2, verbose, t=150, board=newBoard()):
         (p1, p2) = (p2, p1)
         (p1time, p2time) = (p2time, p1time)
         (currentColor, nextColor) = (nextColor, currentColor)
+        printBoard(board)
         if verbose == True:
-            printBoard(board)
             print("Pieces remaining:", currentColor, "=", countPieces(board, currentColor), end=' ')
             print(nextColor, "=", countPieces(board, nextColor), "Moves left =", movesRemaining)
             print("Clock remaining: %s=%f, %s=%f" % (currentColor, p1time, nextColor, p2time))
@@ -332,71 +356,50 @@ def playGame(p1, p2, verbose, t=150, board=newBoard()):
 
 
 def getStatesFromCSV():
-    return np.loadtxt(open("matrix.csv", "rb"), delimiter=",").reshape(maxStateCount, 8, 8)
+    return np.loadtxt(open("matrix.csv", "rb"), delimiter=",").reshape(maxStateCount,8,8)
 
-
-def getBoardFromddd(ddd, index):
-    board = []
-    for i in range(0, 8):
-        board.append([0, 0, 0, 0, 0, 0, 0, 0])
-        for j in range(0, 8):
-            if int(ddd[index, i, j]) == 0:
-                board[i][j] = ' '
-            elif int(ddd[index, i, j]) == 1:
-                board[i][j] = 'r'
-            elif int(ddd[index, i, j]) == 2:
-                board[i][j] = 'R'
-            elif int(ddd[index, i, j]) == -1:
-                board[i][j] = 'w'
-            elif int(ddd[index, i, j]) == -2:
-                board[i][j] = 'W'
-    return board
-
-
-model = load_model('model.h5')
 if __name__ == "__main__":
+    global numBoards, maxStateCount
     try:
         optlist, args = getopt.getopt(sys.argv[1:], 'vt:')
     except getopt.error:
         print("Usage: python %s {-v} {-t time} player1 player2" % (sys.argv[0]))
         exit()
 
-    verbose = False
-    clockTime = 150.0
-    for (op, opVal) in optlist:
-        if (op == "-v"):
-            verbose = True
-        if (op == "-t"):
-            clockTime = float(opVal)
-    exec("from " + args[0] + " import nextMove")
-    p1 = nextMove
-    exec("from " + args[1] + " import nextMove")
-    p2 = nextMove
-    result = playGame(p1, p2, verbose, clockTime)
+    while numBoards < maxStateCount:
+        verbose = False
+        clockTime = 150.0
+        for (op, opVal) in optlist:
+            if (op == "-v"):
+                verbose = True
+            if (op == "-t"):
+                clockTime = float(opVal)
+        exec ("from " + args[0] + " import nextMove")
+        p1 = nextMove
+        exec ("from " + args[1] + " import nextMove")
+        p2 = nextMove
 
-    printBoard(result[0])
+        result = playGame(p1, p2, verbose, clockTime)
+        print(numBoards)
+    stateExport = out.reshape(1, 64 * maxStateCount)
+    np.savetxt("matrix.csv", stateExport, delimiter=',')
+    print(out == getStatesFromCSV())
 
-    if result[3] == "Drawn":
-        if result[1] > result[2]:
-            print(
-                "1 Ran Out Of Moves :: %s Wins %s Loses (%d to %d)" % (args[0], args[1], result[1], result[2]))
-        elif result[1] < result[2]:
-            print(
-                "0 Ran Out Of Moves :: %s Wins %s Loses (%d to %d)" % (args[1], args[0], result[2], result[1]))
-        else:
-            print(
-                "0.5 Ran Out Of Moves :: TIE %s, %s, (%d to %d)" % (args[0], args[1], result[1], result[2]))
-    elif result[3] == "Won":
-        if result[1] > result[2]:
-            print(
-                "1 %s Wins %s Loses (%d to %d)" % (args[0], args[1], result[1], result[2]))
-        elif result[1] < result[2]:
-            print(
-                "0 %s Wins %s Loses (%d to %d)" % (args[1], args[0], result[2], result[1]))
-    else:
-        if result[1] > result[2]:
-            print(
-                "1 %s Wins %s Loses (%d to %d) TIMEOUT" % (args[0], args[1], result[1], result[2]))
-        elif result[1] < result[2]:
-            print(
-                "0 %s Wins %s Loses (%d to %d) TIMEOUT" % (args[1], args[0], result[2], result[1]))
+
+    # if result[3] == "Drawn":
+    #     if result[1] > result[2]:
+    #         print "Ran Out Of Moves :: %s Wins %s Loses (%d to %d)" % (args[0], args[1], result[1], result[2]),
+    #     elif result[1] < result[2]:
+    #         print "Ran Out Of Moves :: %s Wins %s Loses (%d to %d)" % (args[1], args[0], result[2], result[1]),
+    #     else:
+    #         print "Ran Out Of Moves :: TIE %s, %s, (%d to %d)" % (args[0], args[1], result[1], result[2])
+    # elif result[3] == "Won":
+    #     if result[1] > result[2]:
+    #         print "%s Wins %s Loses (%d to %d)" % (args[0], args[1], result[1], result[2]),
+    #     elif result[1] < result[2]:
+    #         print "%s Wins %s Loses (%d to %d)" % (args[1], args[0], result[2], result[1]),
+    # else:
+    #     if result[1] > result[2]:
+    #         print "%s Wins %s Loses (%d to %d) TIMEOUT" % (args[0], args[1], result[1], result[2]),
+    #     elif result[1] < result[2]:
+    #         print "%s Wins %s Loses (%d to %d) TIMEOUT" % (args[1], args[0], result[2], result[1]),
