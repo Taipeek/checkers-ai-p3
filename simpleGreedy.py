@@ -26,7 +26,7 @@ def evaluation(board, color):
     
     return value
 
-def nextMove(board, color, time, movesRemaining):
+def nextMove(board, color, time, movesRemaining,prob):
     moves = getAllPossibleMoves(board, color)
     #Trying to find the move where I have best score
     best = None

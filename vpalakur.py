@@ -30,9 +30,9 @@ def evaluation(board, color, depth, turn, opponentColor, alpha, beta):
             for move in moves:
                 nextBoard = deepcopy(board)
                 gamePlay.doMove(nextBoard,move)
-                if alpha == None or opti == None or alpha < opti: #None conditions are to check for the first times
+                if alpha == -sys.maxsize or opti == -sys.maxsize or alpha < opti: #None conditions are to check for the first times
                     value = evaluation(nextBoard, color, depth, 'max', opponentColor, alpha, beta)
-                    if opti == None or value < opti: #opti = None for the first time
+                    if opti == -sys.maxsize or value < opti: #opti = None for the first time
                         opti = value
                     if opti < beta:
                         beta = opti
@@ -65,7 +65,7 @@ def evaluation(board, color, depth, turn, opponentColor, alpha, beta):
 def nextMove(board, color, time, movesRemaining,prob):
     moves = getAllPossibleMoves(board, color)
     opponentColor = gamePlay.getOpponentColor(color)
-    depth = 5
+    depth = 1
     best = None
     alpha = -sys.maxsize
     beta = float("inf")

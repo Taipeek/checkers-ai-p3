@@ -4,7 +4,9 @@ import getopt
 import numpy as np
 from copy import deepcopy
 from keras.models import load_model
-
+import neuralAgent
+import vpalakur
+import simpleGreedy
 
 def getOpponentColor(color):
     # Returns the opposing color 'w' or 'r'
@@ -275,7 +277,7 @@ def printBoard(board):
         print('-' * 33, '\t', '-' * 41)
 
 
-def playGame(p1, p2, verbose, t=150, board=newBoard()):
+def playGame(p1, p2, verbose, t=150):
     # Takes as input two functions p1 and p2 (each of which
     # calculates a next move given a board and player color),
     # and returns a tuple containing
@@ -284,8 +286,9 @@ def playGame(p1, p2, verbose, t=150, board=newBoard()):
     # pieces left for white,
     # and status message "Drawn"/"Won"/"Timeout"/"Bad Move"
 
+    board = newBoard()
     # printBoard(board)
-    print()
+    # print()
     currentColor = 'r'
     nextColor = 'w'
     p1time = t
@@ -331,9 +334,6 @@ def playGame(p1, p2, verbose, t=150, board=newBoard()):
     return (board, countPieces(board, 'r'), countPieces(board, 'w'), "Won")
 
 
-def getStatesFromCSV():
-    return np.loadtxt(open("matrix.csv", "rb"), delimiter=",").reshape(maxStateCount, 8, 8)
-
 
 def getBoardFromddd(ddd, index):
     board = []
@@ -353,7 +353,7 @@ def getBoardFromddd(ddd, index):
     return board
 
 
-model = load_model('model.h5')
+model = load_model('neuronka4.h5')
 if __name__ == "__main__":
     try:
         optlist, args = getopt.getopt(sys.argv[1:], 'vt:')
@@ -361,42 +361,51 @@ if __name__ == "__main__":
         print("Usage: python %s {-v} {-t time} player1 player2" % (sys.argv[0]))
         exit()
 
-    verbose = False
-    clockTime = 150.0
-    for (op, opVal) in optlist:
-        if (op == "-v"):
-            verbose = True
-        if (op == "-t"):
-            clockTime = float(opVal)
-    exec("from " + args[0] + " import nextMove")
-    p1 = nextMove
-    exec("from " + args[1] + " import nextMove")
-    p2 = nextMove
-    result = playGame(p1, p2, verbose, clockTime)
+    results = 0.0
+    loops = 100
+    for i in range(loops):
+        verbose = False
+        clockTime = 150.0
+        for (op, opVal) in optlist:
+            if (op == "-v"):
+                verbose = True
+            if (op == "-t"):
+                clockTime = float(opVal)
+        # exec("from " + args[0] + " import nextMove")
+        p1 = neuralAgent.nextMove
+        # exec("from " + args[1] + " import nextMove")
+        # p2 = simpleGreedy.nextMove
+        p2 = vpalakur.nextMove
+        result = playGame(p1, p2, verbose, clockTime)
 
-    printBoard(result[0])
+        # printBoard(result[0])
 
-    if result[3] == "Drawn":
-        if result[1] > result[2]:
-            print(
-                "1 Ran Out Of Moves :: %s Wins %s Loses (%d to %d)" % (args[0], args[1], result[1], result[2]))
-        elif result[1] < result[2]:
-            print(
-                "0 Ran Out Of Moves :: %s Wins %s Loses (%d to %d)" % (args[1], args[0], result[2], result[1]))
+        if result[3] == "Drawn":
+            if result[1] > result[2]:
+                results += 1
+                print(
+                    "1 Ran Out Of Moves :: %s Wins %s Loses (%d to %d)" % (args[0], args[1], result[1], result[2]))
+            elif result[1] < result[2]:
+                print(
+                    "0 Ran Out Of Moves :: %s Wins %s Loses (%d to %d)" % (args[1], args[0], result[2], result[1]))
+            else:
+                results += 0.5
+                print(
+                    "0.5 Ran Out Of Moves :: TIE %s, %s, (%d to %d)" % (args[0], args[1], result[1], result[2]))
+        elif result[3] == "Won":
+            if result[1] > result[2]:
+                results += 1
+                print(
+                    "1 %s Wins %s Loses (%d to %d)" % (args[0], args[1], result[1], result[2]))
+            elif result[1] < result[2]:
+                print(
+                    "0 %s Wins %s Loses (%d to %d)" % (args[1], args[0], result[2], result[1]))
         else:
-            print(
-                "0.5 Ran Out Of Moves :: TIE %s, %s, (%d to %d)" % (args[0], args[1], result[1], result[2]))
-    elif result[3] == "Won":
-        if result[1] > result[2]:
-            print(
-                "1 %s Wins %s Loses (%d to %d)" % (args[0], args[1], result[1], result[2]))
-        elif result[1] < result[2]:
-            print(
-                "0 %s Wins %s Loses (%d to %d)" % (args[1], args[0], result[2], result[1]))
-    else:
-        if result[1] > result[2]:
-            print(
-                "1 %s Wins %s Loses (%d to %d) TIMEOUT" % (args[0], args[1], result[1], result[2]))
-        elif result[1] < result[2]:
-            print(
-                "0 %s Wins %s Loses (%d to %d) TIMEOUT" % (args[1], args[0], result[2], result[1]))
+            if result[1] > result[2]:
+                results += 1
+                print(
+                    "1 %s Wins %s Loses (%d to %d) TIMEOUT" % (args[0], args[1], result[1], result[2]))
+            elif result[1] < result[2]:
+                print(
+                    "0 %s Wins %s Loses (%d to %d) TIMEOUT" % (args[1], args[0], result[2], result[1]))
+    print(results / loops)
