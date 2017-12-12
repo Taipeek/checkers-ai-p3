@@ -71,6 +71,18 @@ def evaluation(board, color, depth, turn, opponentColor, alpha, beta):
                 if i == 0 or i == 7:
                     state[0, i, j, 2] = 1
         value = gamePlay.model.predict(state)[:, 0][0]
+        for piece in range(1, 33):
+            xy = gamePlay.serialToGrid(piece)
+            x = xy[0]
+            y = xy[1]
+            if board[x][y] == color.lower():
+                value += 2
+            elif board[x][y] == opponentColor.lower():
+                value -= 2
+            elif board[x][y] == color.upper():
+                value += 3
+            elif board[x][y] == opponentColor.upper():
+                value -= 3
         # print(value)
         return value
 
