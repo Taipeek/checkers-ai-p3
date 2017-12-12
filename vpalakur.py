@@ -65,7 +65,7 @@ def evaluation(board, color, depth, turn, opponentColor, alpha, beta):
 def nextMove(board, color, time, movesRemaining,prob):
     moves = getAllPossibleMoves(board, color)
     opponentColor = gamePlay.getOpponentColor(color)
-    depth = 1
+    depth = 2
     best = None
     alpha = -sys.maxsize
     beta = float("inf")

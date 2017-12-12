@@ -40,21 +40,36 @@ def evaluation(board, color, depth, turn, opponentColor, alpha, beta):
         return opti  # opti will contain the best value for player in MAX turn and worst value for player in MIN turn
 
     else:  # Comes here for the last level i.e leaf nodes
-        state = np.zeros((1, 8, 8, 6))
+        # state = np.zeros((1, 8, 8, 3))
+        # for i in range(0, 8):
+        #     for j in range(0, 8):
+        #         if board[i][j] == 'r':
+        #             state[0, i, j, 0] = 1
+        #         elif board[i][j] == 'R':
+        #             state[0, i, j, 2] = 2
+        #         elif board[i][j] == 'w':
+        #             state[0, i, j, 1] = -1
+        #         elif board[i][j] == 'W':
+        #             state[0, i, j, 3] = -2
+        #         if i == 0 or i == 7 or j == 0 or j == 7:
+        #             state[0, i, j, 4] = 1
+        #         if i == 0 or i == 7:
+        #             state[0, i, j, 5] = 1
+        state = np.zeros((1, 8, 8, 3))
         for i in range(0, 8):
             for j in range(0, 8):
                 if board[i][j] == 'r':
                     state[0, i, j, 0] = 1
                 elif board[i][j] == 'R':
-                    state[0, i, j, 2] = 1
+                    state[0, i, j, 0] = 2
                 elif board[i][j] == 'w':
-                    state[0, i, j, 1] = 1
+                    state[0, i, j, 0] = -1
                 elif board[i][j] == 'W':
-                    state[0, i, j, 3] = 1
+                    state[0, i, j, 0] = -2
                 if i == 0 or i == 7 or j == 0 or j == 7:
-                    state[0, i, j, 4] = 1
+                    state[0, i, j, 1] = 1
                 if i == 0 or i == 7:
-                    state[0, i, j, 5] = 1
+                    state[0, i, j, 2] = 1
         value = gamePlay.model.predict(state)[:, 0][0]
         # print(value)
         return value
@@ -63,10 +78,12 @@ def evaluation(board, color, depth, turn, opponentColor, alpha, beta):
 def nextMove(board, color, time, movesRemaining, prob):
     moves = getAllPossibleMoves(board, color)
     opponentColor = gamePlay.getOpponentColor(color)
-    depth = 4
+    depth = 2
     best = None
     alpha = -sys.maxsize
     beta = float("inf")
+    if np.random.random() > prob:
+        return moves[np.random.randint(len(moves))]
     for move in moves:  # this is the max turn(1st level of minimax), so next should be min's turn
         newBoard = deepcopy(board)
         gamePlay.doMove(newBoard, move)

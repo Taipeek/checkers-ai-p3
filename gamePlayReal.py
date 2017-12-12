@@ -300,7 +300,7 @@ def playGame(p1, p2, verbose, t=150):
     while isAnyMovePossible(board, currentColor) == True:
         tempBoard = deepcopy(board)
         t1 = time.time()
-        nextMove = p1(tempBoard, currentColor, p1time, movesRemaining, 0.95)
+        nextMove = p1(tempBoard, currentColor, p1time, movesRemaining, 0.9)
         t2 = time.time()
         p1time = p1time - (t2 - t1)
         p1realTime = p1realTime - (t2 - t1)
@@ -353,7 +353,7 @@ def getBoardFromddd(ddd, index):
     return board
 
 
-model = load_model('neuronka4.h5')
+model = load_model('checkersNeuralNet.h5')
 if __name__ == "__main__":
     try:
         optlist, args = getopt.getopt(sys.argv[1:], 'vt:')
