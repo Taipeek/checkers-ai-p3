@@ -16,40 +16,6 @@
 15 2.8993625090274975 3.0822792016268794 14.879528400326873
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # Scale font and line width (dpi) by changing the size! It will always display stretched.
 set terminal svg size 400,300 enhanced fname 'arial'  fsize 10 butt solid
 set output 'out.svg'

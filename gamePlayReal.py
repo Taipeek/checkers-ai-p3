@@ -5,6 +5,7 @@ import numpy as np
 from copy import deepcopy
 from keras.models import load_model
 import neuralAgent
+import randomPlay
 import vpalakur
 import simpleGreedy
 
@@ -353,7 +354,7 @@ def getBoardFromddd(ddd, index):
     return board
 
 
-model = load_model('final_net.h5')
+model = load_model('new_neuronka.h5')
 if __name__ == "__main__":
     try:
         optlist, args = getopt.getopt(sys.argv[1:], 'vt:')
@@ -375,7 +376,8 @@ if __name__ == "__main__":
         p1 = neuralAgent.nextMove
         # exec("from " + args[1] + " import nextMove")
         # p2 = simpleGreedy.nextMove
-        p2 = vpalakur.nextMove
+        # p2 = vpalakur.nextMove
+        p2 = randomPlay.nextMove
         result = playGame(p1, p2, verbose, clockTime)
 
         # printBoard(result[0])

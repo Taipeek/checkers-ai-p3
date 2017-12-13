@@ -41,13 +41,16 @@ Ytest=y[trainMask==0]
 
 model = Sequential()
 
-model.add(Conv2D(20,(3, 3), input_shape=(8, 8,6), padding='same', activation='relu'))
-model.add(Conv2D(20,(3, 3), padding='same', activation='relu',kernel_regularizer=regularizers.l2(0.0000001)))
-model.add(Conv2D(20,(3, 3), padding='same', activation='relu',kernel_regularizer=regularizers.l2(0.0000001)))
-model.add(Conv2D(20,(3, 3), padding='same', activation='relu',kernel_regularizer=regularizers.l2(0.0000001)))
-model.add(Conv2D(20,(3, 3), padding='same', activation='relu',kernel_regularizer=regularizers.l2(0.0000001)))
-model.add(Conv2D(20,(3, 3), padding='same', activation='relu',kernel_regularizer=regularizers.l2(0.0000001)))
-model.add(Conv2D(20,(3, 3), padding='same', activation='relu',kernel_regularizer=regularizers.l2(0.0000001)))
+model.add(Conv2D(30,(3, 3), input_shape=(8, 8,6), padding='same', activation='relu'))
+model.add(Conv2D(30,(3, 3), padding='same', activation='relu',kernel_regularizer=regularizers.l2(0.0000001)))
+model.add(Conv2D(30,(3, 3), padding='same', activation='relu',kernel_regularizer=regularizers.l2(0.0000001)))
+model.add(Conv2D(30,(3, 3), padding='same', activation='relu',kernel_regularizer=regularizers.l2(0.0000001)))
+model.add(Conv2D(30,(3, 3), padding='same', activation='relu',kernel_regularizer=regularizers.l2(0.0000001)))
+model.add(Conv2D(30,(3, 3), padding='same', activation='relu',kernel_regularizer=regularizers.l2(0.0000001)))
+model.add(Conv2D(30,(3, 3), padding='same', activation='relu',kernel_regularizer=regularizers.l2(0.0000001)))
+model.add(Conv2D(30,(3, 3), padding='same', activation='relu',kernel_regularizer=regularizers.l2(0.0000001)))
+model.add(Conv2D(30,(3, 3), padding='same', activation='relu',kernel_regularizer=regularizers.l2(0.0000001)))
+model.add(Conv2D(30,(3, 3), padding='same', activation='relu',kernel_regularizer=regularizers.l2(0.0000001)))
 
 
 model.add(Flatten())
